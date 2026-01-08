@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四年級社會科：生活與節慶大闖關</title>
+    <style>
+        :root {
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --accent-color: #ae2012;
+            --light-bg: #fffcf2;
+            --dark-text: #2b2d42;
+            --correct-green: #2a9d8f;
+            --wrong-red: #d00000;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* 固定高度 */
+            text-align: center;
+            overflow: hidden; /* 禁止整個網頁捲動 */
+        }
+
+        /* 容器設計 - 極致緊湊 */
+        #app {
+            width: 98%; /* 更寬，利用空間 */
+            max-width: 1000px;
+            height: 98vh; /* 幾乎佔滿高度 */
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 10px 15px; /* 減少內距 */
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* 標題 (開始/結束畫面) */
+        h1 { font-size: 3rem; color: var(--primary-color); margin: 0.2rem 0; }
+        h2 { font-size: 2.2rem; color: var(--secondary-color); margin: 0.2rem 0; }
+        p, label { font-size: 1.8rem; line-height: 1.4; }
+
+        /* 通用按鈕 - 減少留白 */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px; /* 縮小 */
+            font-size: 1.8rem; /* 稍微縮小按鈕文字以省空間 */
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.1s, background-color 0.2s;
+            font-weight: bold;
+        }
+        .btn:hover { transform: scale(1.05); background-color: var(--secondary-color); }
+        .btn:active { transform: scale(0.95); }
+        .btn-outline { background-color: transparent; border: 3px solid var(--primary-color); color: var(--primary-color); }
+
+        /* --- 頂部資訊列 (更緊湊) --- */
+        #header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            flex-shrink: 0; /* 防止被壓縮 */
+        }
+
+        #question-counter {
+            font-size: 1.8rem; 
+            font-weight: bold;
+        }
+
+        #timer-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            background-color: #f0f8ff;
+            border: 4px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 5px 15px; /* 緊湊 */
+            min-width: 140px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        #timer-text {
+            font-size: 3.5rem; /* 依然很大，但比之前稍微收斂 */
+            font-weight: 900;
+            line-height: 1;
+            color: var(--primary-color);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .timer-label { font-size: 1.5rem; font-weight: bold; color: var(--dark-text); }
+
+        /* 緊急狀態 */
+        .timer-urgent-box {
+            background-color: #ffe6e6 !important;
+            border-color: #d00000 !important;
+            animation: pulse-scale 0.5s infinite alternate;
+        }
+        .timer-urgent-text { color: #d00000 !important; }
+        @keyframes pulse-scale { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        /* 進度條 (變細) */
+        #timer-bar-container {
+            width: 100%;
+            height: 15px; /* 變細 */
+            background-color: #e9ecef;
+            border-radius: 10px;
+            margin: 5px 0 10px 0;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            flex-shrink: 0;
+        }
+
+        #timer-bar { height: 100%; width: 100%; background-color: var(--secondary-color); transition: width 1s linear; }
+        .timer-bar-danger { background-color: var(--accent-color) !important; }
+
+        /* 題目區域 - 核心重點 */
+        #question-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* 靠上對齊 */
+            align-items: center;
+            padding: 0;
+            overflow-y: auto; /* 只有這裡可以在極端情況下捲動 */
+        }
+
+        .question-text {
+            font-size: 3.2rem; /* 堅持不縮小字體！ */
+            font-weight: bold;
+            margin-bottom: 10px; /* 減少間距 */
+            text-align: left;
+            width: 100%;
+            line-height: 1.3;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px; /* 減少間距 */
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 3px solid #dee2e6;
+            color: var(--dark-text);
+            padding: 15px; /* 減少內距 */
+            border-radius: 10px;
+            font-size: 2.2rem; /* 保持大字體，稍微調整 */
+            text-align: left;
+            white-space: normal;
+            transition: all 0.2s;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .option-btn:hover { background-color: #e9ecef; border-color: var(--primary-color); }
+        .option-btn.selected { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        /* 是非題按鈕 (縮小尺寸以適應版面) */
+        .tf-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .tf-btn {
+            font-size: 5rem;
+            width: 140px; /* 縮小 */
+            height: 140px; /* 縮小 */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 5px solid #ccc;
+            background: white;
+            cursor: pointer;
+        }
+        .tf-btn.circle { color: var(--correct-green); border-color: var(--correct-green); }
+        .tf-btn.cross { color: var(--wrong-red); border-color: var(--wrong-red); }
+        .tf-btn.selected { background-color: #eee; transform: scale(0.95); }
+
+        /* 提示區域 (緊湊版) */
+        #hint-box {
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border: 3px solid #ffeeba;
+            border-radius: 8px;
+            font-size: 1.8rem; /* 提示字可以稍微小一點點，因為不是主要閱讀 */
+            color: #856404;
+            display: none;
+            font-weight: bold;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* 底部控制列 */
+        #controls-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 2px solid #eee;
+            flex-shrink: 0;
+        }
+
+        /* 複習列表 */
+        #review-list { text-align: left; width: 100%; overflow-y: auto; max-height: 80vh; }
+        .review-item { border-bottom: 1px solid #ccc; padding: 10px 0; }
+        .review-q { font-weight: bold; font-size: 1.6rem; }
+        .review-a { color: var(--correct-green); font-size: 1.4rem; margin-top: 5px; font-weight: bold;}
+        .review-e { color: #666; font-size: 1.4rem; margin-top: 5px; }
+
+        .screen { display: none; height: 100%; flex-direction: column; }
+        .active-screen { display: flex; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- 開始畫面 -->
+    <div id="start-screen" class="screen active-screen" style="justify-content: center; align-items: center;">
+        <h1>🛡️ 四年級社會科大闖關 🛡️</h1>
+        <h2>生活與節慶篇</h2>
+        <div style="font-size: 1.8rem; margin: 15px; text-align: left; background: #f0f0f0; padding: 20px; border-radius: 15px; max-height: 60vh; overflow-y: auto;">
+            <p><strong>闖關說明：</strong></p>
+            <ul>
+                <li>共有 30 題是非題，35 題選擇題。</li>
+                <li>每題只有 <strong>15 秒</strong> 作答時間！</li>
+                <li>如果在最後 5 秒還沒作答，警報會響起。</li>
+                <li>遇到困難可以點擊「💡 看提示」。</li>
+            </ul>
+        </div>
+        <button class="btn" onclick="startGame()">🚀 開始闖關</button>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="game-screen" class="screen">
+        <div id="header-row">
+            <span id="question-counter">第 1 / 65 題</span>
+            
+            <!-- 醒目計時器面板 -->
+            <div id="timer-box">
+                <span style="font-size: 2rem;">⏱️</span>
+                <span id="timer-text">15</span>
+                <span class="timer-label">秒</span>
+            </div>
+        </div>
+        
+        <div id="timer-bar-container">
+            <div id="timer-bar"></div>
+        </div>
+
+        <div id="question-area">
+            <div id="q-text" class="question-text">題目載入中...</div>
+            
+            <!-- 是非題區域 -->
+            <div id="tf-area" class="tf-container" style="display:none;">
+                <button class="tf-btn circle" onclick="selectAnswer('O')">○</button>
+                <button class="tf-btn cross" onclick="selectAnswer('X')">╳</button>
+            </div>
+
+            <!-- 選擇題區域 -->
+            <div id="mc-area" class="options-grid" style="display:none;">
+                <button class="option-btn" id="opt1" onclick="selectAnswer(1)"></button>
+                <button class="option-btn" id="opt2" onclick="selectAnswer(2)"></button>
+                <button class="option-btn" id="opt3" onclick="selectAnswer(3)"></button>
+                <button class="option-btn" id="opt4" onclick="selectAnswer(4)"></button>
+            </div>
+
+            <!-- 提示文字 -->
+            <div id="hint-box">提示內容</div>
+        </div>
+
+        <div id="controls-area">
+            <button class="btn btn-outline" onclick="prevQuestion()" id="btn-prev" disabled>⬅ 上一題</button>
+            <button class="btn" style="background-color: #e9c46a; color: #333;" onclick="toggleHint()">💡 提示</button>
+            <button class="btn" onclick="nextQuestion()" id="btn-next">下一題 ➡</button>
+        </div>
+    </div>
+
+    <!-- 結束畫面 -->
+    <div id="end-screen" class="screen" style="justify-content: center; align-items: center;">
+        <h1 style="font-size: 4rem; color: var(--correct-green);">🎉 恭喜完成！ 🎉</h1>
+        <p>你已經完成了所有的挑戰！</p>
+        <p>社會老師為你感到驕傲！</p>
+        <div style="margin-top: 20px;">
+            <button class="btn" onclick="showReview()">📖 看題目解析</button>
+            <button class="btn btn-outline" onclick="location.reload()">🔄 再玩一次</button>
+        </div>
+    </div>
+
+    <!-- 複習畫面 -->
+    <div id="review-screen" class="screen">
+        <h2>📚 題目解析總表</h2>
+        <div id="review-list">
+            <!-- JS 動態生成 -->
+        </div>
+        <div style="margin-top: 10px; text-align: center;">
+             <button class="btn" onclick="location.reload()">回首頁</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 題庫資料 (從 PDF 提取) ---
+    const questions = [
+        // 是非題
+        { id: 1, type: 'TF', q: '早期的家鄉居民大多過著「日出而作，日入而息」的生活，主要是因為當時照明設備不發達。', a: 'O', hint: '傳統社會受限於照明技術，白天工作、晚上休息。' },
+        { id: 2, type: 'TF', q: '原住民族的傳統生活作息完全沒有依據，想做什麼就做什麼。', a: 'X', hint: '原住民族會配合自然變化(如月亮圓缺、花開候鳥)或口耳相傳的經驗來安排作息。' },
+        { id: 3, type: 'TF', q: '現代人如果想要挑選搬家(入宅)的好日子，只能參考西洋的陽曆，不能看農民曆。', a: 'X', hint: '現代人仍常參考農民曆上的「宜」、「忌」來安排搬家或結婚等重要活動。' },
+        { id: 4, type: 'TF', q: '邵族的播種祭通常在國曆四月舉行，會讓小孩子參與象徵性的播種。', a: 'O', hint: '邵族播種祭有讓小孩先播種的習俗，祈求作物健康成長。' },
+        { id: 5, type: 'TF', q: '阿美族的豐年祭通常在國曆十二月舉行，是為了傳承狩獵技巧。', a: 'X', hint: '阿美族豐年祭在7~9月，目的是感謝上天恩賜與慶祝豐收；卑南族大獵祭才是在12月。' },
+        { id: 6, type: 'TF', q: '卑南族的大獵祭結束後，婦女和小孩會為歸來的男子戴上花環，表示尊敬與情誼。', a: 'O', hint: '這是卑南族大獵祭的重要習俗。' },
+        { id: 7, type: 'TF', q: '所有的原住民族祭典都必須在同一天舉行，不能分開舉辦。', a: 'X', hint: '各族群配合居住環境與季節變化，舉辦時間並不相同。' },
+        { id: 8, type: 'TF', q: '漢人的除夕夜通常是農曆十二月的最後一天，全家人會圍爐吃團圓飯。', a: 'O', hint: '除夕象徵舊的一年結束，有團圓與發壓歲錢的習俗。' },
+        { id: 9, type: 'TF', q: '清明節是漢人傳統節慶中，唯一依據國曆(24節氣)而定的節日，不一定都在4月5日。', a: 'O', hint: '清明是節氣，日期會在國曆4月4日、5日或6日變動。' },
+        { id: 10, type: 'TF', q: '端午節掛艾草、戴香包的習俗，最早的目的是為了紀念屈原。', a: 'X', hint: '端午節正值炎熱夏季，掛艾草、戴香包原是為了驅除蚊蟲與瘟疫祈求健康。' },
+        { id: 11, type: 'TF', q: '中秋節的主要活動是賞月和吃月餅，象徵家人團圓。', a: 'O', hint: '中秋節是農曆8月15日，月圓人團圓。' },
+        { id: 12, type: 'TF', q: '中元節的主要意義是祭拜祖先與孤魂野鬼，展現博愛的精神。', a: 'O', hint: '農曆7月15日中元節有普渡活動，祭拜「好兄弟」。' },
+        { id: 13, type: 'TF', q: '現代的兒童節是國定假日，目的是讓兒童知道自己的權利與責任。', a: 'O', hint: '兒童節屬於人生階段相關的現代節日。' },
+        { id: 14, type: 'TF', q: '為了感謝警察維護治安，政府將每年的9月28日訂為警察節。', a: 'X', hint: '警察節是6月15日；9月28日是教師節。' },
+        { id: 15, type: 'TF', q: '「和平紀念日」是為了紀念中華民國開國而設立的節日。', a: 'X', hint: '和平紀念日(228)是紀念二二八事件並撫平傷痛；開國紀念日是1月1日。' },
+        { id: 16, type: 'TF', q: '泰國的傳統新年有「潑水節」的習俗，透過潑水給予對方祝福。', a: 'O', hint: '這是受到國際交流影響，家鄉也能見到的外來文化節日。' },
+        { id: 17, type: 'TF', q: '耶誕節原本是佛教徒慶祝佛祖誕生的日子。', a: 'X', hint: '耶誕節是基督教慶祝耶穌誕生的節日。' },
+        { id: 18, type: 'TF', q: '「世界地球日」是4月22日，提醒大家要愛護環境、珍惜資源。', a: 'O', hint: '這是與環境議題相關的國際節日。' },
+        { id: 19, type: 'TF', q: '在農民曆中，看到「宜」的項目表示這天不適合做這件事。', a: 'X', hint: '「宜」表示適合做，「忌」表示不適合做。' },
+        { id: 20, type: 'TF', q: '太魯閣族的感恩祭通常在國曆10月舉行，目的是感謝祖靈庇佑五穀豐收。', a: 'O', hint: '這是太魯閣族感恩祭的特色與時間。' },
+        { id: 21, type: 'TF', q: '現代人生活忙碌，已經完全不需要傳統節慶，這些節日應該取消。', a: 'X', hint: '傳統節慶能凝聚家族向心力，體會先民智慧，應予以保存與尊重。' },
+        { id: 22, type: 'TF', q: '無論是原住民族的祭典或漢人的節慶，大多包含感謝天地與神靈的意義。', a: 'O', hint: '不同族群的節慶雖形式不同，但感恩與敬畏天地的精神是相通的。' },
+        { id: 23, type: 'TF', q: '元宵節又稱為「小過年」，有猜燈謎、提燈籠的習俗。', a: 'O', hint: '元宵節是春節活動的尾聲。' },
+        { id: 24, type: 'TF', q: '教師節定在9月28日，是因為這一天是孔子的誕辰。', a: 'O', hint: '紀念至聖先師孔子，感謝老師的教導。' },
+        { id: 25, type: 'TF', q: '雅美族(達悟族)的飛魚季是為了慶祝打獵豐收。', a: 'X', hint: '飛魚季與捕撈飛魚有關，是祈求漁獲豐收，非陸地打獵。' },
+        { id: 26, type: 'TF', q: '國慶日當天，政府常會舉辦升旗典禮或煙火秀來慶祝國家生日。', a: 'O', hint: '10月10日國慶日的常見活動。' },
+        { id: 27, type: 'TF', q: '現在實施週休二日，主要是受到傳統農耕社會「日出而作」的影響。', a: 'X', hint: '週休二日是現代制度與科技進步影響下的生活作息，與傳統農耕無直接關係。' },
+        { id: 28, type: 'TF', q: '如果同學邀請你參加他們族裡的祭典，我們應該抱持尊重與欣賞的態度。', a: 'O', hint: '面對不同文化應尊重與包容。' },
+        { id: 29, type: 'TF', q: '布農族的「打耳祭」或「射耳祭」是為了祈求農作物豐收。', a: 'X', hint: '打耳祭主要是為了傳承狩獵技巧與祭祀獸骨；播種祭才是祈求豐收。' },
+        { id: 30, type: 'TF', q: '世界閱讀日(4月23日)的目的是鼓勵大家多看電視、少看書。', a: 'X', hint: '世界閱讀日是鼓勵閱讀書籍、尊重著作權。' },
+
+        // 選擇題
+        { id: 31, type: 'MC', q: '下列哪一個原住民族的祭典，主要目的是「祈求作物順利成長」？', opts: ['卑南族大獵祭', '阿美族豐年祭', '邵族播種祭', '雅美族飛魚季'], a: 3, hint: '邵族播種祭在春季舉行，祈求作物成長；阿美族是慶祝豐收。' },
+        { id: 32, type: 'MC', q: '下列關於「農民曆」的敘述，哪一個是錯誤的？', opts: ['記載了適合種植作物的時間', '可以查詢國曆和農曆的日期對照', '上面記載的「宜、忌」是現代法律規定的', '是漢人祖先觀察自然變化累積的智慧'], a: 3, hint: '「宜、忌」是傳統經驗與風俗，非現代法律規定。' },
+        { id: 33, type: 'MC', q: '小明想在國曆12月參加原住民族的祭典，他最可能看到哪一個活動？', opts: ['阿美族感謝上天恩賜的歌舞', '邵族小朋友進行播種儀式', '卑南族長老帶領男子進行狩獵考驗', '太魯閣族感謝祖靈庇佑五穀豐收'], a: 3, hint: '卑南族大獵祭通常在國曆12月舉行。' },
+        { id: 34, type: 'MC', q: '漢人的「春節」主要活動不包含下列哪一項？', opts: ['到親友家拜年', '吃粽子', '發壓歲錢', '到寺廟祈福'], a: 2, hint: '吃粽子是端午節的習俗。' },
+        { id: 35, type: 'MC', q: '下列哪一個節日的日期是依據「國曆(陽曆)」來決定的？', opts: ['中秋節', '端午節', '教師節', '除夕'], a: 3, hint: '教師節是國曆9月28日；其他皆為農曆日期。' },
+        { id: 36, type: 'MC', q: '下列哪一個配對是正確的？', opts: ['警察節：6月15日', '教師節：5月1日', '國慶日：1月1日', '和平紀念日：10月10日'], a: 1, hint: '教師節是9/28，國慶日是10/10，和平紀念日是2/28。' },
+        { id: 37, type: 'MC', q: '關於「端午節」的習俗，下列哪一項描述是正確的？', opts: ['要吃月餅賞月', '因為天氣炎熱，會掛艾草驅除蚊蟲', '是農曆新年的開始', '要到墓地祭拜祖先'], a: 2, hint: '端午節在農曆五月，天氣熱易生病，故有掛艾草習俗。' },
+        { id: 38, type: 'MC', q: '阿美族的「豐年祭」大約在什麼季節舉行？', opts: ['春季', '夏季(7~9月)', '秋末冬初', '冬季(12月)'], a: 2, hint: '阿美族豐年祭約在國曆7~9月。' },
+        { id: 39, type: 'MC', q: '下列哪一個節日是為了紀念「二二八事件」，希望以此撫平歷史傷痛？', opts: ['開國紀念日', '國慶日', '和平紀念日', '青年節'], a: 3, hint: '2月28日為和平紀念日。' },
+        { id: 40, type: 'MC', q: '小華家裡要搬家，奶奶翻開農民曆想要找個好日子，她應該找下列哪一個項目？', opts: ['納采', '入宅', '安葬', '開市'], a: 2, hint: '「入宅」即指搬家。' },
+        { id: 41, type: 'MC', q: '下列哪一個現代節日是由外來文化傳入，且與宗教信仰有關？', opts: ['耶誕節', '勞動節', '兒童節', '母親節'], a: 1, hint: '耶誕節源自基督教，慶祝耶穌誕生。' },
+        { id: 42, type: 'MC', q: '太魯閣族的「感恩祭」主要意義是什麼？', opts: ['祈求打獵順利', '慶祝戰爭勝利', '感謝祖靈庇佑讓五穀豐收', '祈求作物順利發芽'], a: 3, hint: '太魯閣族感恩祭於10月舉行，感謝祖靈庇佑作物收成。' },
+        { id: 43, type: 'MC', q: '下列哪一個節日屬於「國家重要節日」，當天通常會舉辦升旗典禮？', opts: ['開國紀念日', '聖誕節', '萬聖節', '情人節'], a: 1, hint: '1月1日開國紀念日會舉辦升旗典禮。' },
+        { id: 44, type: 'MC', q: '「中元節」會有放水燈、祭拜好兄弟的活動，這是在農曆的幾月？', opts: ['一月', '五月', '七月', '八月'], a: 3, hint: '農曆7月15日為中元節。' },
+        { id: 45, type: 'MC', q: '下列哪一項不是傳統漢人生活作息的主要依據？', opts: ['太陽的升落', '季節的變化', '農民曆的記載', '週休二日制度'], a: 4, hint: '週休二日是現代制度；傳統依據日照、季節與農民曆。' },
+        { id: 46, type: 'MC', q: '新住民加入台灣社會後，帶來了許多家鄉的節慶，例如泰國的什麼節日？', opts: ['潑水節', '火把節', '啤酒節', '番茄節'], a: 1, hint: '泰國潑水節是著名的新住民文化節日。' },
+        { id: 47, type: 'MC', q: '關於「世界地球日」，我們可以採取什麼行動來響應？', opts: ['購買大量塑膠玩具', '隨手關燈、節約能源', '把垃圾丟到河裡', '整天開著冷氣'], a: 2, hint: '世界地球日提倡愛護環境與資源。' },
+        { id: 48, type: 'MC', q: '在農民曆上，如果看到某一天標示「忌：嫁娶」，代表什麼意思？', opts: ['這一天非常適合結婚', '這一天不適合舉辦婚禮', '這一天適合搬家', '這一天適合去捕魚'], a: 2, hint: '「忌」代表不宜從事該活動，「嫁娶」指結婚。' },
+        { id: 49, type: 'MC', q: '雅美族(達悟族)的傳統生活中，會配合哪一種動物的季節來安排祭典？', opts: ['山豬', '飛魚', '黑熊', '梅花鹿'], a: 2, hint: '雅美族(達悟族)有飛魚祭、招魚祭等與飛魚相關的祭典。' },
+        { id: 50, type: 'MC', q: '下列哪一個節日不是使用農曆日期？', opts: ['除夕', '端午節', '教師節', '中秋節'], a: 3, hint: '教師節是國曆9/28，其餘皆為農曆傳統節慶。' },
+        { id: 51, type: 'MC', q: '「吃湯圓、猜燈謎、提燈籠」是哪一個傳統節日的特色？', opts: ['春節', '元宵節', '清明節', '重陽節'], a: 2, hint: '元宵節(農曆1月15日)的特色活動。' },
+        { id: 52, type: 'MC', q: '為了表達對母親的感謝，我們會在國曆五月的第幾個星期日慶祝母親節？', opts: ['第一個', '第二個', '第三個', '第四個'], a: 2, hint: '母親節是五月的第二個星期日。' },
+        { id: 53, type: 'MC', q: '邵族的播種祭中，為什麼要讓小孩子參與播種？', opts: ['因為大人很忙', '因為小孩比較有力氣', '象徵作物能像小孩一樣健康成長', '因為小孩想要玩泥土'], a: 3, hint: '這是邵族播種祭的特殊意義。' },
+        { id: 54, type: 'MC', q: '下列關於現代生活作息的敘述，何者正確？', opts: ['完全依照日出日落來工作', '主要使用農曆來計算上班日', '實施週休二日，有工作日與休息日之分', '一定要參考農民曆才能出門'], a: 3, hint: '現代作息受制度與科技影響，有明確的工作日與休息日。' },
+        { id: 55, type: 'MC', q: '賽夏族的「祖靈祭」，主要的祭祀對象是誰？', opts: ['山神', '海神', '矮靈(祖靈)', '太陽神'], a: 3, hint: '賽夏族著名的祭典是「矮靈祭」(亦稱祖靈祭)。' },
+        { id: 56, type: 'MC', q: '「祭祖、掃墓、慎終追遠」是哪一個節日的核心精神？', opts: ['清明節', '端午節', '七夕', '元宵節'], a: 1, hint: '清明節的主要活動是掃墓祭祖。' },
+        { id: 57, type: 'MC', q: '關於現代訂定「世界閱讀日」的目的，下列何者正確？', opts: ['鼓勵大家購買玩具', '鼓勵大家多閱讀書籍並尊重著作權', '鼓勵大家去戶外運動', '鼓勵大家多看漫畫少看字'], a: 2, hint: '4/23世界閱讀日，提倡閱讀與版權概念。' },
+        { id: 58, type: 'MC', q: '下列哪一組節日的配對是錯誤的？', opts: ['除夕：農曆12月最後一天', '端午節：農曆5月5日', '中秋節：農曆8月15日', '教師節：農曆9月28日'], a: 4, hint: '教師節是「國曆」9月28日。' },
+        { id: 59, type: 'MC', q: '原住民族的祭典活動中，如果外人想要參觀或參與，應該抱持什麼態度？', opts: ['隨意進出，不用問人', '大聲喧嘩，批評活動', '尊重當地的規範，先徵詢同意', '覺得無聊就直接離開'], a: 3, hint: '尊重族群文化，不可隨意干擾祭典。' },
+        { id: 60, type: 'MC', q: '家鄉的老街在發展過程中，可能會因為什麼原因而產生變化？', opts: ['人口外移或老化', '觀光活動的興起', '保留傳統建築', '以上皆是'], a: 4, hint: '老街會因社會經濟發展、人口變遷而改變風貌。' },
+        { id: 61, type: 'MC', q: '王老闆新開了一家「珍珠奶茶店」，想要挑選一個好日子正式對外營業。他應該在農民曆上尋找哪一個「宜」的項目？', opts: ['嫁娶', '入宅', '開市', '安葬'], a: 3, hint: '「開市」是指新公司或商店正式開業；「入宅」是搬家。' },
+        { id: 62, type: 'MC', q: '農民曆上寫著「宜：嫁娶、祭祀、入宅；忌：作灶、安葬」。請問這一天不適合做下列哪一件事？', opts: ['搬進新家', '舉辦婚禮', '祭拜祖先', '舉行喪葬儀式'], a: 4, hint: '「忌」表示不適宜從事的活動，題目標示「忌：安葬」。' },
+        { id: 63, type: 'MC', q: '除了吉凶宜忌之外，傳統的農民曆上通常還會記載下列哪一種與早期居民生計息息相關的資訊？', opts: ['高鐵與火車的時刻表', '當天的天氣預報與溫度', '適合種植的作物與可捕撈的魚類', '當天的電視節目表'], a: 3, hint: '農民曆會記載各地適合種植的作物及漁撈資訊。' },
+        { id: 64, type: 'MC', q: '關於現代人使用農民曆的情形，下列哪一種敘述是最正確的？', opts: ['這是迷信，現代法律規定禁止使用', '只有種田的農夫才可以使用', '所有人都必須嚴格遵守，不能更改日期', '有些人仍會參考，但也有人會依據個人需求來安排'], a: 4, hint: '現代人生活型態改變，可依個人需求彈性安排。' },
+        { id: 65, type: 'MC', q: '爺爺翻開農民曆想要幫忙找一個把新車開回家的好日子。爺爺應該找下列哪一個項目？', opts: ['納采', '交車', '破土', '栽種'], a: 2, hint: '農民曆中的「交車」代表適合去買車或把新車開回家。' }
+    ];
+
+    // --- 遊戲狀態 ---
+    let currentQIndex = 0;
+    let timer = null;
+    let timeLeft = 15;
+    let audioContext = null;
+    let isPlaying = false;
+
+    // --- 音效合成 (Web Audio API) ---
+    function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playTickSound(isUrgent) {
+        if (!audioContext) return;
+        if (audioContext.state === 'suspended') audioContext.resume();
+
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        // 緊迫時音調更高
+        osc.frequency.value = isUrgent ? 800 : 400; 
+        osc.type = isUrgent ? 'sawtooth' : 'sine';
+
+        // 聲音包絡線 (短促的滴答聲)
+        gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.1);
+    }
+
+    // --- 遊戲邏輯 ---
+    function startGame() {
+        initAudio();
+        document.getElementById('start-screen').classList.remove('active-screen');
+        document.getElementById('game-screen').classList.add('active-screen');
+        currentQIndex = 0;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        // 重置狀態
+        resetTimer();
+        document.getElementById('hint-box').style.display = 'none';
+        document.getElementById('hint-box').innerText = questions[currentQIndex].hint;
+        
+        // 更新按鈕狀態
+        document.getElementById('btn-prev').disabled = (currentQIndex === 0);
+        document.getElementById('btn-next').innerText = (currentQIndex === questions.length - 1) ? "完成測驗 🏁" : "下一題 ➡";
+        document.getElementById('question-counter').innerText = `第 ${currentQIndex + 1} / ${questions.length} 題`;
+
+        // 清除選擇樣式
+        document.querySelectorAll('.tf-btn, .option-btn').forEach(b => b.classList.remove('selected'));
+
+        const q = questions[currentQIndex];
+        const qText = document.getElementById('q-text');
+        
+        // 加上題型標籤
+        const typeLabel = q.type === 'TF' ? '【是非題】' : '【選擇題】';
+        qText.innerHTML = `<span style="color:var(--primary-color)">${typeLabel}</span> ${q.q}`;
+
+        if (q.type === 'TF') {
+            document.getElementById('tf-area').style.display = 'flex';
+            document.getElementById('mc-area').style.display = 'none';
+        } else {
+            document.getElementById('tf-area').style.display = 'none';
+            document.getElementById('mc-area').style.display = 'grid';
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`opt${i+1}`);
+                btn.innerText = `(${i+1}) ${q.opts[i]}`;
+            }
+        }
+
+        startTimer();
+    }
+
+    function selectAnswer(ans) {
+        // 這裡只做視覺選取，不做評分（教學模式）
+        if (questions[currentQIndex].type === 'TF') {
+             document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('selected'));
+             if(ans === 'O') document.querySelector('.tf-btn.circle').classList.add('selected');
+             else document.querySelector('.tf-btn.cross').classList.add('selected');
+        } else {
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById(`opt${ans}`).classList.add('selected');
+        }
+    }
+
+    function nextQuestion() {
+        if (currentQIndex < questions.length - 1) {
+            currentQIndex++;
+            loadQuestion();
+        } else {
+            endGame();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQIndex > 0) {
+            currentQIndex--;
+            loadQuestion();
+        }
+    }
+
+    function toggleHint() {
+        const hintBox = document.getElementById('hint-box');
+        hintBox.style.display = (hintBox.style.display === 'none') ? 'block' : 'none';
+    }
+
+    // --- 計時器邏輯 ---
+    function resetTimer() {
+        clearInterval(timer);
+        timeLeft = 15;
+        updateTimerDisplay();
+        document.getElementById('timer-bar').classList.remove('timer-bar-danger');
+        document.getElementById('timer-box').classList.remove('timer-urgent-box');
+        document.getElementById('timer-text').classList.remove('timer-urgent-text');
+    }
+
+    function startTimer() {
+        updateTimerDisplay();
+        timer = setInterval(() => {
+            timeLeft--;
+            
+            // 最後5秒效果
+            if (timeLeft <= 5) {
+                document.getElementById('timer-bar').classList.add('timer-bar-danger');
+                document.getElementById('timer-box').classList.add('timer-urgent-box');
+                document.getElementById('timer-text').classList.add('timer-urgent-text');
+                playTickSound(true); // 急促音效
+            } else {
+                playTickSound(false); // 普通音效
+            }
+
+            updateTimerDisplay();
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                // 時間到不強制換頁，但可以顯示提示
+                document.getElementById('hint-box').style.display = 'block';
+                document.getElementById('hint-box').innerText = "⏰ 時間到！請參考提示作答。";
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        document.getElementById('timer-text').innerText = timeLeft;
+        const percentage = (timeLeft / 15) * 100;
+        document.getElementById('timer-bar').style.width = `${percentage}%`;
+    }
+
+    function endGame() {
+        clearInterval(timer);
+        document.getElementById('game-screen').classList.remove('active-screen');
+        document.getElementById('end-screen').classList.add('active-screen');
+    }
+
+    function showReview() {
+        document.getElementById('end-screen').classList.remove('active-screen');
+        document.getElementById('review-screen').classList.add('active-screen');
+        
+        const list = document.getElementById('review-list');
+        list.innerHTML = ''; // 清空
+
+        questions.forEach((q, index) => {
+            const item = document.createElement('div');
+            item.className = 'review-item';
+            
+            let ansText = '';
+            if (q.type === 'TF') {
+                ansText = q.a === 'O' ? '○' : '╳';
+            } else {
+                // 選擇題答案轉換
+                ansText = `(${q.a}) ${q.opts[q.a - 1]}`;
+            }
+
+            item.innerHTML = `
+                <div class="review-q">${index + 1}. ${q.q}</div>
+                <div class="review-a">✅ 正確答案：${ansText}</div>
+                <div class="review-e">📝 解析：${q.hint}</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+</script>
+
+</body>
+</html>
